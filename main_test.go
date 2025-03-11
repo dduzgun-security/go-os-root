@@ -161,13 +161,6 @@ func TestReadSecureFile(t *testing.T) {
 func TestWriteAtomicSwap(t *testing.T) {
 	tempDir := t.TempDir()
 
-	// Create a symlink for the symlink test case
-	symlinkPath := tempDir + "/symlink_to_passwd"
-	err := os.Symlink("../../../../../etc/passwd", symlinkPath)
-	if err != nil {
-		t.Fatalf("failed to create symlink: %v", err)
-	}
-
 	tests := []struct {
 		name        string
 		directory   string
