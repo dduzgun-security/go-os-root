@@ -1,4 +1,4 @@
-module go-root
+module go-os-root
 
 go 1.24.0
 
