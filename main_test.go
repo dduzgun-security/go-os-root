@@ -212,7 +212,18 @@ func TestWriteAtomicSwap(t *testing.T) {
 
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			tempFile, err := os.CreateTemp(tt.directory, "temp-")
+			root, err := os.OpenRoot(tt.directory)
+			if err != nil {
+				if tt.wantErr {
+					must.Error(t, err)
+					must.StrContains(t, err.Error(), tt.expectedErr)
+					return
+				}
+				t.Fatalf("failed to open root: %v", err)
+			}
+			defer root.Close()
+
+			tmpFile, err := root.Create("temp-" + tt.fileName)
 			if err != nil {
 				if tt.wantErr {
 					must.Error(t, err)
@@ -221,15 +232,19 @@ func TestWriteAtomicSwap(t *testing.T) {
 				}
 				t.Fatalf("failed to create temp file: %v", err)
 			}
-			defer os.Remove(tempFile.Name())
+			defer tmpFile.Close()
 
-			_, err = tempFile.WriteString(tt.content)
+			_, err = tmpFile.WriteString(tt.content)
 			if err != nil {
 				t.Fatalf("failed to write to temp file: %v", err)
 			}
-			tempFile.Close()
 
-			err = os.Rename(tempFile.Name(), tt.directory+"/"+tt.fileName)
+			err = tmpFile.Close()
+			if err != nil {
+				t.Fatalf("failed to close temp file: %v", err)
+			}
+
+			err = os.Rename(tmpFile.Name(), tt.directory+"/"+tt.fileName)
 			if tt.wantErr {
 				must.Error(t, err)
 				must.StrContains(t, err.Error(), tt.expectedErr)
